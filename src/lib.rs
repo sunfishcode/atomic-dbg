@@ -78,7 +78,8 @@ impl Writer {
                 self.flush_console(stderr)
             } else {
                 self.flush_buf()
-            }.unwrap();
+            }
+            .unwrap();
         }
     }
 
@@ -280,7 +281,8 @@ macro_rules! eprintln {
     };
 }
 
-/// Prints and returns the value of a given expression for quick and dirty debugging.
+/// Prints and returns the value of a given expression for quick and dirty
+/// debugging.
 ///
 /// Similar to [`std::dbg`], except it:
 ///  - Writes atomically, up to the greatest length supported on the platform.
