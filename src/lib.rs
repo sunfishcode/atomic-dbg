@@ -2,12 +2,19 @@ use core::cmp::min;
 use core::fmt::{self, Write};
 #[cfg(windows)]
 use {
+    io_lifetimes::BorrowedHandle,
+    is_terminal::IsTerminal,
+    std::os::windows::io::RawHandle,
     std::ptr::null_mut,
-    windows_sys::Win32::Foundation::{GetLastError, SetLastError},
+    windows_sys::Win32::Foundation::{GetLastError, SetLastError, HANDLE},
     windows_sys::Win32::Storage::FileSystem::WriteFile,
-    windows_sys::Win32::System::Console::GetStdHandle,
     windows_sys::Win32::System::Console::STD_ERROR_HANDLE,
+    windows_sys::Win32::System::Console::{GetStdHandle, WriteConsoleW},
 };
+
+// No specific size is documented, so just pick a number.
+#[cfg(windows)]
+const BUF_LEN: usize = 4096;
 
 struct Writer {
     pos: usize,
@@ -16,9 +23,15 @@ struct Writer {
     #[cfg(unix)]
     buf: [u8; rustix::io::PIPE_BUF],
 
-    // No specific size is documented, so just pick a number.
     #[cfg(windows)]
-    buf: [u8; 4096],
+    buf: [u8; BUF_LEN],
+
+    // A buffer of UTF-16, for the Windows console.
+    #[cfg(windows)]
+    console_buf: [u16; BUF_LEN],
+
+    #[cfg(windows)]
+    console_pos: usize,
 
     #[cfg(unix)]
     saved_errno: errno::Errno,
@@ -36,7 +49,13 @@ impl Writer {
             buf: [0_u8; rustix::io::PIPE_BUF],
 
             #[cfg(windows)]
-            buf: [0_u8; 4096],
+            buf: [0_u8; BUF_LEN],
+
+            #[cfg(windows)]
+            console_buf: [0_u16; BUF_LEN],
+
+            #[cfg(windows)]
+            console_pos: 0,
 
             #[cfg(unix)]
             saved_errno: errno::errno(),
@@ -46,7 +65,24 @@ impl Writer {
         }
     }
 
-    fn flush(&mut self) -> fmt::Result {
+    fn flush(&mut self) {
+        #[cfg(unix)]
+        {
+            self.flush_buf().unwrap();
+        }
+
+        #[cfg(windows)]
+        {
+            let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
+            if unsafe { BorrowedHandle::borrow_raw(stderr as RawHandle) }.is_terminal() {
+                self.flush_console(stderr)
+            } else {
+                self.flush_buf()
+            }.unwrap();
+        }
+    }
+
+    fn flush_buf(&mut self) -> fmt::Result {
         let mut s = &self.buf[..self.pos];
 
         // Safety: Users using `dbg`/`eprintln`/`eprint` APIs should be aware
@@ -86,6 +122,31 @@ impl Writer {
         self.pos = 0;
         Ok(())
     }
+
+    #[cfg(windows)]
+    fn flush_console(&mut self, handle: HANDLE) -> fmt::Result {
+        // Write `self.console_buf` to the console.
+        let mut s = &self.console_buf[..self.console_pos];
+        while !s.is_empty() {
+            unsafe {
+                let mut n16 = 0;
+                if WriteConsoleW(
+                    handle,
+                    s.as_ptr().cast(),
+                    min(s.len(), u32::MAX as usize) as u32,
+                    &mut n16,
+                    null_mut(),
+                ) == 0
+                {
+                    return Err(fmt::Error);
+                }
+                s = &s[n16 as usize..];
+            }
+        }
+
+        self.console_pos = 0;
+        Ok(())
+    }
 }
 
 impl Drop for Writer {
@@ -102,11 +163,40 @@ impl Drop for Writer {
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
+        // On Windows, to write Unicode to the console, we need to use some
+        // form of `WriteConsole` instead of `WriteFile`.
+        #[cfg(windows)]
+        {
+            let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
+            if unsafe { BorrowedHandle::borrow_raw(stderr as RawHandle) }.is_terminal() {
+                // If the stream switched on us, just fail.
+                if self.pos != 0 {
+                    return Err(fmt::Error);
+                }
+
+                // Transcode `s` to UTF-16 and write it to the console.
+                for c in s.chars() {
+                    if self.console_buf.len() - self.console_pos < 2 {
+                        self.flush_console(stderr)?;
+                    }
+                    self.console_pos += c
+                        .encode_utf16(&mut self.console_buf[self.console_pos..])
+                        .len();
+                }
+                return Ok(());
+            }
+
+            // If the stream switched on us, just fail.
+            if self.console_pos != 0 {
+                return Err(fmt::Error);
+            }
+        }
+
         let mut bytes = s.as_bytes();
         while !bytes.is_empty() {
             let mut sink = &mut self.buf[self.pos..];
             if sink.is_empty() {
-                self.flush()?;
+                self.flush_buf()?;
                 sink = &mut self.buf;
             }
 
@@ -125,7 +215,7 @@ impl fmt::Write for Writer {
 pub fn _eprint(args: fmt::Arguments<'_>) {
     let mut writer = Writer::new();
     writer.write_fmt(args).unwrap();
-    writer.flush().unwrap();
+    writer.flush();
 }
 
 #[doc(hidden)]
@@ -133,7 +223,7 @@ pub fn _eprintln(args: fmt::Arguments<'_>) {
     let mut writer = Writer::new();
     writer.write_fmt(args).unwrap();
     writer.write_fmt(format_args!("\n")).unwrap();
-    writer.flush().unwrap();
+    writer.flush();
 }
 
 #[doc(hidden)]
@@ -151,7 +241,7 @@ pub fn _dbg_write(dbg: &mut _Dbg, file: &str, line: u32, name: &str, args: fmt::
 
 #[doc(hidden)]
 pub fn _dbg_finish(mut dbg: _Dbg) {
-    dbg.0.flush().unwrap();
+    dbg.0.flush();
 }
 
 /// Prints to the standard error.

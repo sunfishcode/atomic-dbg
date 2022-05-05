@@ -23,3 +23,7 @@ features = [
     "Win32_Storage_FileSystem",
     "Win32_System_IO",
 ]
+
+[target.'cfg(windows)'.dependencies]
+is-terminal = "0.2.0"
+io-lifetimes = "0.6.0"
