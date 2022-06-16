@@ -99,7 +99,7 @@ impl Writer {
             #[cfg(unix)]
             match rustix::io::write(stderr, s) {
                 Ok(n) => s = &s[n..],
-                Err(rustix::io::Error::INTR) => (),
+                Err(rustix::io::Errno::INTR) => (),
                 Err(_) => return Err(fmt::Error),
             }
 

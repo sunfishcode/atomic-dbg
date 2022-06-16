@@ -12,7 +12,7 @@ categories = ["development-tools"]
 exclude = ["/.*"]
 
 [target.'cfg(unix)'.dependencies]
-rustix = "0.34.4"
+rustix = "0.35.6"
 errno = { version = "0.2.8", default-features = false }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
@@ -25,5 +25,5 @@ features = [
 ]
 
 [target.'cfg(windows)'.dependencies]
-is-terminal = "0.2.0"
-io-lifetimes = "0.6.0"
+is-terminal = "0.3.0"
+io-lifetimes = "0.7.0"
