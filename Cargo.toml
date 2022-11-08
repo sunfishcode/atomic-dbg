@@ -1,6 +1,6 @@
 [package]
 name = "atomic-dbg"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Dan Gohman <dev@sunfishcode.online>"]
 description = "Atomic `dbg`/`eprintln`/`eprint` macros"
 documentation = "https://docs.rs/atomic-dbg"
