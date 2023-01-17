@@ -1,3 +1,5 @@
+#![no_std]
+
 use core::cmp::min;
 use core::fmt::{self, Write};
 #[cfg(windows)]
@@ -33,6 +35,7 @@ struct Writer {
     #[cfg(windows)]
     console_pos: usize,
 
+    #[cfg(feature = "errno")]
     #[cfg(unix)]
     saved_errno: errno::Errno,
 
@@ -57,6 +60,7 @@ impl Writer {
             #[cfg(windows)]
             console_pos: 0,
 
+            #[cfg(feature = "errno")]
             #[cfg(unix)]
             saved_errno: errno::errno(),
 
@@ -152,6 +156,7 @@ impl Writer {
 
 impl Drop for Writer {
     fn drop(&mut self) {
+        #[cfg(feature = "errno")]
         #[cfg(unix)]
         errno::set_errno(self.saved_errno);
 
