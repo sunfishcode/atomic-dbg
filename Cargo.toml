@@ -26,7 +26,7 @@ features = [
 
 [target.'cfg(windows)'.dependencies]
 is-terminal = "0.4.0"
-io-lifetimes = "1.0.0"
+io-lifetimes = { version = "1.0.0", default-features = false }
 
 [features]
 default = ["errno"]
