@@ -1,11 +1,12 @@
+#![no_std]
+
 use core::cmp::min;
 use core::fmt::{self, Write};
 #[cfg(windows)]
 use {
     io_lifetimes::BorrowedHandle,
     is_terminal::IsTerminal,
-    std::os::windows::io::RawHandle,
-    std::ptr::null_mut,
+    core::ptr::null_mut,
     windows_sys::Win32::Foundation::{GetLastError, SetLastError, HANDLE},
     windows_sys::Win32::Storage::FileSystem::WriteFile,
     windows_sys::Win32::System::Console::STD_ERROR_HANDLE,
@@ -33,6 +34,7 @@ struct Writer {
     #[cfg(windows)]
     console_pos: usize,
 
+    #[cfg(feature = "errno")]
     #[cfg(unix)]
     saved_errno: errno::Errno,
 
@@ -57,6 +59,7 @@ impl Writer {
             #[cfg(windows)]
             console_pos: 0,
 
+            #[cfg(feature = "errno")]
             #[cfg(unix)]
             saved_errno: errno::errno(),
 
@@ -74,7 +77,7 @@ impl Writer {
         #[cfg(windows)]
         {
             let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
-            if unsafe { BorrowedHandle::borrow_raw(stderr as RawHandle) }.is_terminal() {
+            if unsafe { BorrowedHandle::borrow_raw(stderr as _) }.is_terminal() {
                 self.flush_console(stderr)
             } else {
                 self.flush_buf()
@@ -152,6 +155,7 @@ impl Writer {
 
 impl Drop for Writer {
     fn drop(&mut self) {
+        #[cfg(feature = "errno")]
         #[cfg(unix)]
         errno::set_errno(self.saved_errno);
 
@@ -169,7 +173,7 @@ impl fmt::Write for Writer {
         #[cfg(windows)]
         {
             let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
-            if unsafe { BorrowedHandle::borrow_raw(stderr as RawHandle) }.is_terminal() {
+            if unsafe { BorrowedHandle::borrow_raw(stderr as _) }.is_terminal() {
                 // If the stream switched on us, just fail.
                 if self.pos != 0 {
                     return Err(fmt::Error);

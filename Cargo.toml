@@ -12,11 +12,11 @@ categories = ["development-tools"]
 exclude = ["/.*"]
 
 [target.'cfg(unix)'.dependencies]
-rustix = "0.36.0"
-errno = { version = "0.2.8", default-features = false }
+rustix = { version = "0.36.0", default-features = false }
+errno = { version = "0.2.8", default-features = false, optional = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.42.0"
+version = "0.45.0"
 features = [
     "Win32_Foundation",
     "Win32_System_Console",
@@ -26,4 +26,7 @@ features = [
 
 [target.'cfg(windows)'.dependencies]
 is-terminal = "0.4.0"
-io-lifetimes = "1.0.0"
+io-lifetimes = { version = "1.0.0", default-features = false }
+
+[features]
+default = ["errno"]
