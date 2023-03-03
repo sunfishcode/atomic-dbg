@@ -12,8 +12,8 @@ categories = ["development-tools"]
 exclude = ["/.*"]
 
 [target.'cfg(unix)'.dependencies]
-rustix = { version = "0.36.0", default-features = false }
-errno = { version = "0.2.8", default-features = false, optional = true }
+rustix = { version = "0.37.0", default-features = false }
+errno = { version = "0.3.0", default-features = false, optional = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
 version = "0.45.0"
