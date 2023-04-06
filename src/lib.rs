@@ -93,7 +93,7 @@ impl Writer {
         // that these assume that the stderr file descriptor is open and valid
         // to write to.
         #[cfg(unix)]
-        let stderr = unsafe { rustix::io::stderr() };
+        let stderr = rustix::io::stderr();
 
         #[cfg(windows)]
         let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };
