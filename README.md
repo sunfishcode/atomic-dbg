@@ -9,15 +9,15 @@ This crate provides [`dbg`], [`eprint`], and [`eprintln`], macros which work
 just like their [counterparts] [in] [std], but which:
 
  - Write atomically, up to the greatest length supported on the platform.
- - Don't use locks (in userspace).
+ - Don't use locks (in userspace) or dynamic allocations.
  - Preserve libc's `errno` and Windows' last-error code value.
 
 This means they can be used just about anywhere within a program, including
 inside allocator implementations, inside synchronization primitives, startup
-code, around FFI calls, inside signal handlers, and in the child process of
-a `fork` before an `exec`.
+code, around FFI calls, inside signal handlers, and in the child process of a
+`fork` before an `exec`.
 
-And, when multiple threads are printing, as long as their within the length
+And, when multiple threads are printing, as long as they're within the length
 supported on the platform, the output is readable instead of potentially
 interleaved with other output.
 
