@@ -1,12 +1,13 @@
+#![doc = include_str!("../README.md")]
 #![no_std]
 
 use core::cmp::min;
 use core::fmt::{self, Write};
 #[cfg(windows)]
 use {
+    core::ptr::null_mut,
     io_lifetimes::BorrowedHandle,
     is_terminal::IsTerminal,
-    core::ptr::null_mut,
     windows_sys::Win32::Foundation::{GetLastError, SetLastError, HANDLE},
     windows_sys::Win32::Storage::FileSystem::WriteFile,
     windows_sys::Win32::System::Console::STD_ERROR_HANDLE,
@@ -22,7 +23,7 @@ struct Writer {
 
     // `PIPE_BUF` is the biggest buffer we can write atomically.
     #[cfg(unix)]
-    buf: [u8; rustix::io::PIPE_BUF],
+    buf: [u8; rustix::pipe::PIPE_BUF],
 
     #[cfg(windows)]
     buf: [u8; BUF_LEN],
@@ -48,7 +49,7 @@ impl Writer {
             pos: 0,
 
             #[cfg(unix)]
-            buf: [0_u8; rustix::io::PIPE_BUF],
+            buf: [0_u8; rustix::pipe::PIPE_BUF],
 
             #[cfg(windows)]
             buf: [0_u8; BUF_LEN],
@@ -93,7 +94,7 @@ impl Writer {
         // that these assume that the stderr file descriptor is open and valid
         // to write to.
         #[cfg(unix)]
-        let stderr = rustix::io::stderr();
+        let stderr = unsafe { rustix::stdio::stderr() };
 
         #[cfg(windows)]
         let stderr = unsafe { GetStdHandle(STD_ERROR_HANDLE) };

@@ -31,13 +31,13 @@ fn main() {
 ```
 
 Has this strace output:
-```
+```notrust
 write(2, "[examples/dbg.rs:4] 2 = 2\n[examples/dbg.rs:4] 3 = 3\n[examples/dbg.rs:4] 4 = 4\n", 78[examples/dbg.rs:4] 2 = 2
 ```
 which is a single atomic `write` call.
 
 For comparison, with `std::dbg` it looks like this:
-```
+```notrust
 write(2, "[", 1[)                        = 1
 write(2, "examples/dbg.rs", 15examples/dbg.rs)         = 15
 write(2, ":", 1:)                        = 1
@@ -69,6 +69,9 @@ write(2, "4", 14)                        = 1
 write(2, "\n", 1
 )                       = 1
 ```
+
+atomic-dbg is `no_std`, however like `std`, it uses the stderr file descriptor
+ambiently, assuming that it's open.
 
 [counterparts]: https://doc.rust-lang.org/stable/std/macro.dbg.html
 [in]: https://doc.rust-lang.org/stable/std/macro.eprintln.html
