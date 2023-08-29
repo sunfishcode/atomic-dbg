@@ -1,6 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![no_std]
 
+#[cfg(feature = "log")]
+pub mod log;
+
 use core::cmp::min;
 use core::fmt::{self, Write};
 #[cfg(windows)]
