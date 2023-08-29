@@ -14,6 +14,7 @@ exclude = ["/.*"]
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "0.38.0", default-features = false, features = ["stdio", "pipe"] }
 errno = { version = "0.3.0", default-features = false, optional = true }
+log = { version = "0.4", default-features = false, optional = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
 version = "0.48.0"

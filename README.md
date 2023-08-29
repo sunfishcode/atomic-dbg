@@ -73,6 +73,11 @@ write(2, "\n", 1
 atomic-dbg is `no_std`, however like `std`, it uses the stderr file descriptor
 ambiently, assuming that it's open.
 
+## Logging
+
+With the "log" feature enabled, atomic-dbg defines an `atomic_dbg::log::init`
+which installed a minimal logging implementation using the `eprintln` macro.
+
 [counterparts]: https://doc.rust-lang.org/stable/std/macro.dbg.html
 [in]: https://doc.rust-lang.org/stable/std/macro.eprintln.html
 [std]: https://doc.rust-lang.org/stable/std/macro.eprint.html
