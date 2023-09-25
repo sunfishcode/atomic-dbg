@@ -93,7 +93,7 @@ impl Writer {
     fn flush_buf(&mut self) -> fmt::Result {
         let mut s = &self.buf[..self.pos];
 
-        // Safety: Users using `dbg`/`eprintln`/`eprint` APIs should be aware
+        // SAFETY: Users using `dbg`/`eprintln`/`eprint` APIs should be aware
         // that these assume that the stderr file descriptor is open and valid
         // to write to.
         #[cfg(unix)]
