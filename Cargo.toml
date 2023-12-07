@@ -17,7 +17,7 @@ errno = { version = "0.3.0", default-features = false, optional = true }
 log = { version = "0.4", default-features = false, optional = true }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.48.0"
+version = "0.52.0"
 features = [
     "Win32_Foundation",
     "Win32_System_Console",
@@ -27,7 +27,7 @@ features = [
 
 [target.'cfg(windows)'.dependencies]
 is-terminal = "0.4.0"
-io-lifetimes = { version = "1.0.0", default-features = false }
+io-lifetimes = { version = "2.0.0", default-features = false }
 
 [features]
 default = ["errno"]
