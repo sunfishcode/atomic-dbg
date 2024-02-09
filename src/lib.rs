@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![no_std]
+#![cfg_attr(not(windows), no_std)]
 
 #[cfg(feature = "log")]
 pub mod log;
@@ -10,7 +10,7 @@ use core::fmt::{self, Write};
 use {
     core::ptr::null_mut,
     io_lifetimes::BorrowedHandle,
-    is_terminal::IsTerminal,
+    std::io::IsTerminal,
     windows_sys::Win32::Foundation::{GetLastError, SetLastError, HANDLE},
     windows_sys::Win32::Storage::FileSystem::WriteFile,
     windows_sys::Win32::System::Console::STD_ERROR_HANDLE,
